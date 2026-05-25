@@ -3,23 +3,45 @@ name: Dispatch workflow
 on:
   workflow_dispatch:
     inputs:
-      name:
-        description: "Enter your name"
-        type: choice
-        options:
-          - John
-          - Jane
-          - Jack
-        required: false
-        default: "John"
+      john:
+        type: boolean
+        default: false
+
+      jane:
+        type: boolean
+        default: false
+
+      jack:
+        type: boolean
+        default: false
+
 jobs:
   say-hello:
     runs-on: ubuntu-latest
+
+    env:
+      JOHN: ${{ inputs.john }}
+      JANE: ${{ inputs.jane }}
+      JACK: ${{ inputs.jack }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: say hello
-        run: echo "Hello ${{ github.event.inputs.name }}"
+
+      - name: Load .env file
+        run: |
+          [ -f sfa/env/.env ] && cat sfa/env/.env | grep -v '^#' | grep -v '^$' >> $GITHUB_ENV
+
+      - name: Print selected names
+        run: |
+          NAMES=()
+          for pair in "JOHN:John" "JANE:Jane" "JACK:Jack"; do
+            var_value="${!pair%%:*}"
+            [[ "$var_value" == "true" ]] && NAMES+=("${pair##*:}")
+          done
+          echo "Selected names: ${NAMES[*]}"
+
+
       - name: Setup python
         uses: actions/setup-python@v4
         with:
@@ -28,4 +50,10 @@ jobs:
         run: pip install requests
 
       - name: Run hello.py script
-        run: python hello.py
+        run: |
+          NAMES=()
+          for pair in "JOHN:John" "JANE:Jane" "JACK:Jack"; do
+            var_value="${!pair%%:*}"
+            [[ "$var_value" == "true" ]] && NAMES+=("${pair##*:}")
+          done
+          python hello.py "$(IFS=,; echo "${NAMES[*]}")"
