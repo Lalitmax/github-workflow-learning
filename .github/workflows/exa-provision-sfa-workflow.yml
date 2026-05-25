@@ -1,0 +1,216 @@
+name: Exa Provision, SFA Downgrade/Upgrade workflow
+
+on:
+  workflow_dispatch:
+    inputs:
+      ai400x_123_124:
+        type: boolean
+        description: "Run on ai400x-123-124"
+        default: false
+
+      ai400x_125_126:
+        type: boolean
+        description: "Run on ai400x-125-126"
+        default: false
+
+      ai400x3_206_207:
+        type: boolean
+        description: "Run on ai400x3-206-207"
+        default: false
+
+      ai400x2_multi_sfa_97_100:
+        type: boolean
+        description: "Run on ai400x2-multi-sfa-97-100"
+        default: false
+
+      ai400x2_multi_sfa_123_126:
+        type: boolean
+        description: "Run on ai400x2-multi-sfa-123-126"
+        default: false
+
+      exa_provision:
+        type: boolean
+        description: "Provision EXA cluster"
+        default: false
+
+      release:
+        type: choice
+        description: "The EXA release to provision"
+        options:
+          - "7.0.0"
+          - "6.3.8"
+          - "6.3.7"
+          - "6.3.6"
+          - "6.3.5"
+          - "6.3.4"
+          - "6.3.3"
+          - "6.3.2"
+          - "6.3.1"
+        default: "6.3.8"
+
+      image_release:
+        type: string
+        description: "The image release to provision, for GA builds input build number (eg: 2025091300)"
+        default: latest
+
+      distro_id:
+        type: choice
+        description: "The distro flavor"
+        options:
+          - "rocky"
+          - "rhel"
+        default: "rocky"
+
+      build_type:
+        type: choice
+        description: "The build type of the image"
+        options:
+          - "stream"
+          - "staging"
+          - "test"
+          - "GA"
+        default: "stream"
+
+      sfa_action:
+        type: choice
+        description: "Action to perform SFA downgrade/upgrade (optional)"
+        options:
+          - ""
+          - "downgrade"
+          - "upgrade"
+        default: ""
+        required: false
+
+      sfa_version:
+        type: choice
+        description: "SFA version to downgrade/upgrade to (only required when 'sfa_action' is chosen)"
+        default: ""
+        options:
+          - ""
+          - "12.2"
+          - "12.3"
+          - "12.4"
+          - "12.5"
+          - "12.6"
+          - "12.7"
+          - "12.8"
+          - "12.9"
+        required: false
+
+      sfa_firmware_pack_name:
+        type: string
+        description: "SFA Firmware Pack Name (only required when 'sfa_action' is chosen), can be found here (http://10.36.44.45/artifacts/exascaler/firmware/)"
+        default: "ddn-flash-ALTAV-latest-opt.ddn.tgz"
+        required: false
+
+      ref:
+        type: string
+        description: "The whamcloud/cluster-provisioning ref to build"
+        default: "main"
+
+defaults:
+  run:
+    shell: bash -eux {0}
+
+jobs:
+  parse_environments:
+    runs-on: ubuntu-latest
+    outputs:
+      environments_json: ${{ steps.parse.outputs.environments_json }}
+
+    steps:
+      - name: Parse selected environments
+        id: parse
+        run: |
+          ENVS=()
+
+          if [[ "${{ inputs.ai400x_123_124 }}" == "true" ]]; then
+            ENVS+=("ai400x-123-124")
+          fi
+
+          if [[ "${{ inputs.ai400x_125_126 }}" == "true" ]]; then
+            ENVS+=("ai400x-125-126")
+          fi
+
+          if [[ "${{ inputs.ai400x3_206_207 }}" == "true" ]]; then
+            ENVS+=("ai400x3-206-207")
+          fi
+
+          if [[ "${{ inputs.ai400x2_multi_sfa_97_100 }}" == "true" ]]; then
+            ENVS+=("ai400x2-multi-sfa-97-100")
+          fi
+
+          if [[ "${{ inputs.ai400x2_multi_sfa_123_126 }}" == "true" ]]; then
+            ENVS+=("ai400x2-multi-sfa-123-126")
+          fi
+
+          JSON_ARRAY=$(printf '%s\n' "${ENVS[@]}" | jq -R . | jq -s -c .)
+          echo "environments_json=$JSON_ARRAY" >> "$GITHUB_OUTPUT"
+
+          echo "Selected environments: ${ENVS[*]}"
+          echo "JSON: $JSON_ARRAY"
+
+  exa_provision:
+    if: inputs.exa_provision == true
+    needs: parse_environments
+    strategy:
+      matrix:
+        environment: ${{ fromJSON(needs.parse_environments.outputs.environments_json) }}
+      fail-fast: false
+    runs-on: [self-hosted, "${{ matrix.environment }}"]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Display provision info
+        run: |
+          echo "========================================="
+          echo "EXA Provision on: ${{ matrix.environment }}"
+          echo "========================================="
+          echo "Release: ${{ inputs.release }}"
+          echo "Image Release: ${{ inputs.image_release }}"
+          echo "Distro: ${{ inputs.distro_id }}"
+          echo "Build Type: ${{ inputs.build_type }}"
+          echo "Ref: ${{ inputs.ref }}"
+
+      - name: Run EXA provision
+        run: |
+          echo "Provisioning EXA cluster..."
+          echo "Environment: ${{ matrix.environment }}"
+          echo "Release: ${{ inputs.release }}"
+          echo "Image: ${{ inputs.image_release }}"
+          # Add your actual provision commands here
+
+  setup_sfa:
+    if: inputs.sfa_action != ''
+    needs: parse_environments
+    strategy:
+      matrix:
+        environment: ${{ fromJSON(needs.parse_environments.outputs.environments_json) }}
+      fail-fast: false
+    runs-on: [self-hosted, "${{ matrix.environment }}"]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Display SFA action info
+        run: |
+          echo "========================================="
+          echo "SFA ${{ inputs.sfa_action }} on: ${{ matrix.environment }}"
+          echo "========================================="
+          echo "Action: ${{ inputs.sfa_action }}"
+          echo "SFA Version: ${{ inputs.sfa_version }}"
+          echo "Firmware Pack: ${{ inputs.sfa_firmware_pack_name }}"
+
+      - name: Run SFA downgrade/upgrade
+        run: |
+          echo "Running SFA ${{ inputs.sfa_action }}..."
+          echo "Target Version: ${{ inputs.sfa_version }}"
+          echo "Firmware Pack: ${{ inputs.sfa_firmware_pack_name }}"
+          # Add your actual SFA downgrade/upgrade commands here

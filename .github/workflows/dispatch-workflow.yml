@@ -3,6 +3,7 @@ name: Dispatch workflow
 on:
   workflow_dispatch:
     inputs:
+      env2:
       ai400x2_133_134:
         type: boolean
         description: "ai400x2-133-134"
@@ -44,6 +45,7 @@ jobs:
 
     outputs:
       selected_environments: ${{ steps.parse.outputs.environments }}
+      environments_json: ${{ steps.parse.outputs.environments_json }}
 
     steps:
       - name: Parse checkboxes and build environment list
@@ -79,17 +81,27 @@ jobs:
             ENVS+=("SFA-Version")
           fi
 
+          # Space-separated for display
           echo "environments=${ENVS[*]}" >> "$GITHUB_OUTPUT"
+
+          # JSON array for matrix strategy
+          JSON_ARRAY=$(printf '%s\n' "${ENVS[@]}" | jq -R . | jq -s -c .)
+          echo "environments_json=$JSON_ARRAY" >> "$GITHUB_OUTPUT"
 
           echo "Selected environments:"
           printf '%s\n' "${ENVS[@]}"
+          echo "JSON: $JSON_ARRAY"
 
-  say_hello:
+  print_selected_environments:
     runs-on: ubuntu-latest
     needs: parse_inputs
+    if: ${{ needs.parse_inputs.outputs.environments_json != '[]' }}
+    strategy:
+      matrix:
+        environment: ${{ fromJSON(needs.parse_inputs.outputs.environments_json) }}
 
     steps:
-      - name: Display selected environments
+      - name: Display environment on dedicated machine
         run: |
-          echo "Selected environments:"
-          echo "${{ needs.parse_inputs.outputs.selected_environments }}"
+          echo "Running on dedicated machine for: ${{ matrix.environment }}"
+          echo "Environment: ${{ matrix.environment }}"
