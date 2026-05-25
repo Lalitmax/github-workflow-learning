@@ -1,4 +1,4 @@
-name: Abc Provision, ABC Downgrade/Upgrade workflow
+name: Abc Provision, storage cluster Downgrade/Upgrade workflow
 
 on:
   workflow_dispatch:
