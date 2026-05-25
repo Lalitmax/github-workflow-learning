@@ -3,59 +3,86 @@ name: Dispatch workflow
 on:
   workflow_dispatch:
     inputs:
-      john:
+      ai400x2_133_134:
         type: boolean
+        description: "ai400x2-133-134"
         default: false
 
-      jane:
+      ai400x_123_124:
         type: boolean
+        description: "ai400x-123-124"
         default: false
 
-      jack:
+      ai400x_125_126:
         type: boolean
+        description: "ai400x-125-126"
+        default: false
+
+      ai400x3_206_207:
+        type: boolean
+        description: "ai400x3-206-207"
+        default: false
+
+      ai400x2_multi_sfa_97_100:
+        type: boolean
+        description: "ai400x2-multi-sfa-97-100"
+        default: false
+
+      ai400x2_multi_sfa_123_126:
+        type: boolean
+        description: "ai400x2-multi-sfa-123-126"
+        default: false
+
+      env7:
+        type: boolean
+        description: "Environment 7"
+        default: false
+
+      env8:
+        type: boolean
+        description: "Environment 8"
+        default: false
+
+      env9:
+        type: boolean
+        description: "Environment 9"
+        default: false
+
+      env10:
+        type: boolean
+        description: "Environment 10"
         default: false
 
 jobs:
-  say-hello:
+  parse-inputs:
     runs-on: ubuntu-latest
-
-    env:
-      JOHN: ${{ inputs.john }}
-      JANE: ${{ inputs.jane }}
-      JACK: ${{ inputs.jack }}
+    outputs:
+      selected-environments: ${{ steps.parse.outputs.environments }}
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Load .env file
+      - name: Parse checkboxes and build environment list
+        id: parse
         run: |
-          cat sfa/env/.env | grep -v '^#' | grep -v '^$' >> $GITHUB_ENV
+          ENVS=()
+          ${{ inputs.ai400x2_133_134 == true && 'ENVS+=("ai400x2-133-134")' || '' }}
+          ${{ inputs.ai400x_123_124 == true && 'ENVS+=("ai400x-123-124")' || '' }}
+          ${{ inputs.ai400x_125_126 == true && 'ENVS+=("ai400x-125-126")' || '' }}
+          ${{ inputs.ai400x3_206_207 == true && 'ENVS+=("ai400x3-206-207")' || '' }}
+          ${{ inputs.ai400x2_multi_sfa_97_100 == true && 'ENVS+=("ai400x2-multi-sfa-97-100")' || '' }}
+          ${{ inputs.ai400x2_multi_sfa_123_126 == true && 'ENVS+=("ai400x2-multi-sfa-123-126")' || '' }}
+          ${{ inputs.env7 == true && 'ENVS+=("Environment-7")' || '' }}
+          ${{ inputs.env8 == true && 'ENVS+=("Environment-8")' || '' }}
+          ${{ inputs.env9 == true && 'ENVS+=("Environment-9")' || '' }}
+          ${{ inputs.env10 == true && 'ENVS+=("Environment-10")' || '' }}
 
-      - name: Print selected names
-        run: |
-          NAMES=()
-          for pair in "JOHN:NAME1" "JANE:NAME2" "JACK:NAME3"; do
-            checkbox="${pair%%:*}"
-            name_var="${pair##*:}"
-            [[ "${!checkbox}" == "true" ]] && NAMES+=("${!name_var}")
-          done
-          echo "Selected names: ${NAMES[*]}"
+          echo "environments=${ENVS[*]}" >> $GITHUB_OUTPUT
+          echo "Selected environments: ${ENVS[*]}"
 
+  say-hello:
+    runs-on: ubuntu-latest
+    needs: parse-inputs
 
-      - name: Setup python
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.11
-      - name: Install dep...
-        run: pip install requests
+    steps:
+      - name: Display selected environments
+        run: echo "Selected environments: ${{ needs.parse-inputs.outputs.selected-environments }}"
 
-      - name: Run hello.py script
-        run: |
-          NAMES=()
-          for pair in "JOHN:NAME1" "JANE:NAME2" "JACK:NAME3"; do
-            checkbox="${pair%%:*}"
-            name_var="${pair##*:}"
-            [[ "${!checkbox}" == "true" ]] && NAMES+=("${!name_var}")
-          done
-          python hello.py "$(IFS=,; echo "${NAMES[*]}")"
