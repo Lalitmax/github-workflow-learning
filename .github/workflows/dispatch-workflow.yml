@@ -33,29 +33,15 @@ on:
         description: "ai400x2-multi-sfa-123-126"
         default: false
 
-      env7:
+      sfa_version:
         type: boolean
-        description: "Environment 7"
-        default: false
-
-      env8:
-        type: boolean
-        description: "Environment 8"
-        default: false
-
-      env9:
-        type: boolean
-        description: "Environment 9"
-        default: false
-
-      env10:
-        type: boolean
-        description: "Environment 10"
+        description: "SFA Version"
         default: false
 
 jobs:
   parse_inputs:
     runs-on: ubuntu-latest
+
     outputs:
       selected_environments: ${{ steps.parse.outputs.environments }}
 
@@ -64,19 +50,39 @@ jobs:
         id: parse
         run: |
           ENVS=()
-          ${{ inputs.ai400x2_133_134 == true && 'ENVS+=("ai400x2-133-134")' || '' }}
-          ${{ inputs.ai400x_123_124 == true && 'ENVS+=("ai400x-123-124")' || '' }}
-          ${{ inputs.ai400x_125_126 == true && 'ENVS+=("ai400x-125-126")' || '' }}
-          ${{ inputs.ai400x3_206_207 == true && 'ENVS+=("ai400x3-206-207")' || '' }}
-          ${{ inputs.ai400x2_multi_sfa_97_100 == true && 'ENVS+=("ai400x2-multi-sfa-97-100")' || '' }}
-          ${{ inputs.ai400x2_multi_sfa_123_126 == true && 'ENVS+=("ai400x2-multi-sfa-123-126")' || '' }}
-          ${{ inputs.env7 == true && 'ENVS+=("Environment-7")' || '' }}
-          ${{ inputs.env8 == true && 'ENVS+=("Environment-8")' || '' }}
-          ${{ inputs.env9 == true && 'ENVS+=("Environment-9")' || '' }}
-          ${{ inputs.env10 == true && 'ENVS+=("Environment-10")' || '' }}
 
-          echo "environments=${ENVS[*]}" >> $GITHUB_OUTPUT
-          echo "Selected environments: ${ENVS[*]}"
+          if [[ "${{ inputs.ai400x2_133_134 }}" == "true" ]]; then
+            ENVS+=("ai400x2-133-134")
+          fi
+
+          if [[ "${{ inputs.ai400x_123_124 }}" == "true" ]]; then
+            ENVS+=("ai400x-123-124")
+          fi
+
+          if [[ "${{ inputs.ai400x_125_126 }}" == "true" ]]; then
+            ENVS+=("ai400x-125-126")
+          fi
+
+          if [[ "${{ inputs.ai400x3_206_207 }}" == "true" ]]; then
+            ENVS+=("ai400x3-206-207")
+          fi
+
+          if [[ "${{ inputs.ai400x2_multi_sfa_97_100 }}" == "true" ]]; then
+            ENVS+=("ai400x2-multi-sfa-97-100")
+          fi
+
+          if [[ "${{ inputs.ai400x2_multi_sfa_123_126 }}" == "true" ]]; then
+            ENVS+=("ai400x2-multi-sfa-123-126")
+          fi
+
+          if [[ "${{ inputs.sfa_version }}" == "true" ]]; then
+            ENVS+=("SFA-Version")
+          fi
+
+          echo "environments=${ENVS[*]}" >> "$GITHUB_OUTPUT"
+
+          echo "Selected environments:"
+          printf '%s\n' "${ENVS[@]}"
 
   say_hello:
     runs-on: ubuntu-latest
@@ -84,5 +90,6 @@ jobs:
 
     steps:
       - name: Display selected environments
-        run: echo "Selected environments: ${{ needs.parse_inputs.outputs.selected_environments }}"
-
+        run: |
+          echo "Selected environments:"
+          echo "${{ needs.parse_inputs.outputs.selected_environments }}"
