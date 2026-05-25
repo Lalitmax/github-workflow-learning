@@ -54,7 +54,7 @@ on:
         default: false
 
 jobs:
-  parse-inputs:
+  parse_inputs:
     runs-on: ubuntu-latest
     outputs:
       selected_environments: ${{ steps.parse.outputs.environments }}
@@ -78,11 +78,11 @@ jobs:
           echo "environments=${ENVS[*]}" >> $GITHUB_OUTPUT
           echo "Selected environments: ${ENVS[*]}"
 
-  say-hello:
+  say_hello:
     runs-on: ubuntu-latest
-    needs: parse-inputs
+    needs: parse_inputs
 
     steps:
       - name: Display selected environments
-        run: echo "Selected environments: ${{ needs.parse-inputs.outputs.selected_environments }}"
+        run: echo "Selected environments: ${{ needs.parse_inputs.outputs.selected_environments }}"
 
