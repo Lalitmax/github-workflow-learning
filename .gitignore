@@ -1,1 +1,3 @@
-.env
+/.env
+# Allow sfa/env/.env to be committed
+!sfa/env/.env
