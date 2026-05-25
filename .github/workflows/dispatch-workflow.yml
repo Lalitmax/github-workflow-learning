@@ -57,7 +57,7 @@ jobs:
   parse-inputs:
     runs-on: ubuntu-latest
     outputs:
-      selected-environments: ${{ steps.parse.outputs.environments }}
+      selected_environments: ${{ steps.parse.outputs.environments }}
 
     steps:
       - name: Parse checkboxes and build environment list
@@ -84,5 +84,5 @@ jobs:
 
     steps:
       - name: Display selected environments
-        run: echo "Selected environments: ${{ needs.parse-inputs.outputs.selected-environments }}"
+        run: echo "Selected environments: ${{ needs.parse-inputs.outputs.selected_environments }}"
 
