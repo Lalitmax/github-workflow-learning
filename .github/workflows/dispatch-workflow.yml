@@ -1,0 +1,29 @@
+name: Dispatch workflow
+
+on:
+  workflow_dispatch:
+    inputs:
+      name:
+        description: "Enter your name"
+        type: choice
+        options:
+          - John
+          - Jane
+          - Jack
+        required: false
+        default: "John"
+jobs:
+  say-hello:
+    runs-on: ubuntu-latest
+    steps:
+      - name: say hello
+        run: echo "Hello ${{ github.event.inputs.name }}"
+      - name: Setup python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+      - name: Install dep...
+        run: pip install requests
+
+      - name: Run hello.py script
+        run: python hello.py
