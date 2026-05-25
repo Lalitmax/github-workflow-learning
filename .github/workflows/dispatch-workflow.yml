@@ -30,14 +30,15 @@ jobs:
 
       - name: Load .env file
         run: |
-          [ -f sfa/env/.env ] && cat sfa/env/.env | grep -v '^#' | grep -v '^$' >> $GITHUB_ENV
+          cat sfa/env/.env | grep -v '^#' | grep -v '^$' >> $GITHUB_ENV
 
       - name: Print selected names
         run: |
           NAMES=()
-          for pair in "JOHN:John" "JANE:Jane" "JACK:Jack"; do
-            var_value="${!pair%%:*}"
-            [[ "$var_value" == "true" ]] && NAMES+=("${pair##*:}")
+          for pair in "JOHN:NAME1" "JANE:NAME2" "JACK:NAME3"; do
+            checkbox="${pair%%:*}"
+            name_var="${pair##*:}"
+            [[ "${!checkbox}" == "true" ]] && NAMES+=("${!name_var}")
           done
           echo "Selected names: ${NAMES[*]}"
 
@@ -52,8 +53,9 @@ jobs:
       - name: Run hello.py script
         run: |
           NAMES=()
-          for pair in "JOHN:John" "JANE:Jane" "JACK:Jack"; do
-            var_value="${!pair%%:*}"
-            [[ "$var_value" == "true" ]] && NAMES+=("${pair##*:}")
+          for pair in "JOHN:NAME1" "JANE:NAME2" "JACK:NAME3"; do
+            checkbox="${pair%%:*}"
+            name_var="${pair##*:}"
+            [[ "${!checkbox}" == "true" ]] && NAMES+=("${!name_var}")
           done
           python hello.py "$(IFS=,; echo "${NAMES[*]}")"
