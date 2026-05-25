@@ -24,19 +24,19 @@ on:
         description: "ai400x3-206-207"
         default: false
 
-      ai400x2_multi_sfa_97_100:
+      ai400x2_multi_abc_97_100:
         type: boolean
-        description: "ai400x2-multi-sfa-97-100"
+        description: "ai400x2-multi-abc-97-100"
         default: false
 
-      ai400x2_multi_sfa_123_126:
+      ai400x2_multi_abc_123_126:
         type: boolean
-        description: "ai400x2-multi-sfa-123-126"
+        description: "ai400x2-multi-abc-123-126"
         default: false
 
-      sfa_version:
+      abc_version:
         type: boolean
-        description: "SFA Version"
+        description: "ABC Version"
         default: false
 
 jobs:
@@ -69,16 +69,16 @@ jobs:
             ENVS+=("ai400x3-206-207")
           fi
 
-          if [[ "${{ inputs.ai400x2_multi_sfa_97_100 }}" == "true" ]]; then
-            ENVS+=("ai400x2-multi-sfa-97-100")
+          if [[ "${{ inputs.ai400x2_multi_abc_97_100 }}" == "true" ]]; then
+            ENVS+=("ai400x2-multi-abc-97-100")
           fi
 
-          if [[ "${{ inputs.ai400x2_multi_sfa_123_126 }}" == "true" ]]; then
-            ENVS+=("ai400x2-multi-sfa-123-126")
+          if [[ "${{ inputs.ai400x2_multi_abc_123_126 }}" == "true" ]]; then
+            ENVS+=("ai400x2-multi-abc-123-126")
           fi
 
-          if [[ "${{ inputs.sfa_version }}" == "true" ]]; then
-            ENVS+=("SFA-Version")
+          if [[ "${{ inputs.abc_version }}" == "true" ]]; then
+            ENVS+=("ABC-Version")
           fi
 
           # Space-separated for display

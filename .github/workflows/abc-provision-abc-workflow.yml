@@ -1,4 +1,4 @@
-name: Exa Provision, SFA Downgrade/Upgrade workflow
+name: Abc Provision, ABC Downgrade/Upgrade workflow
 
 on:
   workflow_dispatch:
@@ -18,24 +18,24 @@ on:
         description: "Run on ai400x3-206-207"
         default: false
 
-      ai400x2_multi_sfa_97_100:
+      ai400x2_multi_abc_97_100:
         type: boolean
-        description: "Run on ai400x2-multi-sfa-97-100"
+        description: "Run on ai400x2-multi-abc-97-100"
         default: false
 
-      ai400x2_multi_sfa_123_126:
+      ai400x2_multi_abc_123_126:
         type: boolean
-        description: "Run on ai400x2-multi-sfa-123-126"
+        description: "Run on ai400x2-multi-abc-123-126"
         default: false
 
-      exa_provision:
+      abc_provision:
         type: boolean
-        description: "Provision EXA cluster"
+        description: "Provision ABC cluster"
         default: false
 
       release:
         type: choice
-        description: "The EXA release to provision"
+        description: "The ABC release to provision"
         options:
           - "7.0.0"
           - "6.3.8"
@@ -71,9 +71,9 @@ on:
           - "GA"
         default: "stream"
 
-      sfa_action:
+      abc_action:
         type: choice
-        description: "Action to perform SFA downgrade/upgrade (optional)"
+        description: "Action to perform ABC downgrade/upgrade (optional)"
         options:
           - ""
           - "downgrade"
@@ -81,9 +81,9 @@ on:
         default: ""
         required: false
 
-      sfa_version:
+      abc_version:
         type: choice
-        description: "SFA version to downgrade/upgrade to (only required when 'sfa_action' is chosen)"
+        description: "ABC version to downgrade/upgrade to (only required when 'abc_action' is chosen)"
         default: ""
         options:
           - ""
@@ -97,9 +97,9 @@ on:
           - "12.9"
         required: false
 
-      sfa_firmware_pack_name:
+      abc_firmware_pack_name:
         type: string
-        description: "SFA Firmware Pack Name (only required when 'sfa_action' is chosen), can be found here (http://10.36.44.45/artifacts/exascaler/firmware/)"
+        description: "ABC Firmware Pack Name (only required when 'abc_action' is chosen), can be found here (http://10.36.44.45/artifacts/abcscaler/firmware/)"
         default: "ddn-flash-ALTAV-latest-opt.ddn.tgz"
         required: false
 
@@ -136,12 +136,12 @@ jobs:
             ENVS+=("ai400x3-206-207")
           fi
 
-          if [[ "${{ inputs.ai400x2_multi_sfa_97_100 }}" == "true" ]]; then
-            ENVS+=("ai400x2-multi-sfa-97-100")
+          if [[ "${{ inputs.ai400x2_multi_abc_97_100 }}" == "true" ]]; then
+            ENVS+=("ai400x2-multi-abc-97-100")
           fi
 
-          if [[ "${{ inputs.ai400x2_multi_sfa_123_126 }}" == "true" ]]; then
-            ENVS+=("ai400x2-multi-sfa-123-126")
+          if [[ "${{ inputs.ai400x2_multi_abc_123_126 }}" == "true" ]]; then
+            ENVS+=("ai400x2-multi-abc-123-126")
           fi
 
           JSON_ARRAY=$(printf '%s\n' "${ENVS[@]}" | jq -R . | jq -s -c .)
@@ -150,8 +150,8 @@ jobs:
           echo "Selected environments: ${ENVS[*]}"
           echo "JSON: $JSON_ARRAY"
 
-  exa_provision:
-    if: inputs.exa_provision == true
+  abc_provision:
+    if: inputs.abc_provision == true
     needs: parse_environments
     strategy:
       matrix:
@@ -168,7 +168,7 @@ jobs:
       - name: Display provision info
         run: |
           echo "========================================="
-          echo "EXA Provision on: ${{ matrix.environment }}"
+          echo "ABC Provision on: ${{ matrix.environment }}"
           echo "========================================="
           echo "Release: ${{ inputs.release }}"
           echo "Image Release: ${{ inputs.image_release }}"
@@ -176,16 +176,16 @@ jobs:
           echo "Build Type: ${{ inputs.build_type }}"
           echo "Ref: ${{ inputs.ref }}"
 
-      - name: Run EXA provision
+      - name: Run ABC provision
         run: |
-          echo "Provisioning EXA cluster..."
+          echo "Provisioning ABC cluster..."
           echo "Environment: ${{ matrix.environment }}"
           echo "Release: ${{ inputs.release }}"
           echo "Image: ${{ inputs.image_release }}"
           # Add your actual provision commands here
 
-  setup_sfa:
-    if: inputs.sfa_action != ''
+  setup_abc:
+    if: inputs.abc_action != ''
     needs: parse_environments
     strategy:
       matrix:
@@ -199,18 +199,18 @@ jobs:
         with:
           ref: ${{ inputs.ref }}
 
-      - name: Display SFA action info
+      - name: Display ABC action info
         run: |
           echo "========================================="
-          echo "SFA ${{ inputs.sfa_action }} on: ${{ matrix.environment }}"
+          echo "ABC ${{ inputs.abc_action }} on: ${{ matrix.environment }}"
           echo "========================================="
-          echo "Action: ${{ inputs.sfa_action }}"
-          echo "SFA Version: ${{ inputs.sfa_version }}"
-          echo "Firmware Pack: ${{ inputs.sfa_firmware_pack_name }}"
+          echo "Action: ${{ inputs.abc_action }}"
+          echo "ABC Version: ${{ inputs.abc_version }}"
+          echo "Firmware Pack: ${{ inputs.abc_firmware_pack_name }}"
 
-      - name: Run SFA downgrade/upgrade
+      - name: Run ABC downgrade/upgrade
         run: |
-          echo "Running SFA ${{ inputs.sfa_action }}..."
-          echo "Target Version: ${{ inputs.sfa_version }}"
-          echo "Firmware Pack: ${{ inputs.sfa_firmware_pack_name }}"
-          # Add your actual SFA downgrade/upgrade commands here
+          echo "Running ABC ${{ inputs.abc_action }}..."
+          echo "Target Version: ${{ inputs.abc_version }}"
+          echo "Firmware Pack: ${{ inputs.abc_firmware_pack_name }}"
+          # Add your actual ABC downgrade/upgrade commands here
