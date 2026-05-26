@@ -6,7 +6,7 @@ on:
       ai400x_123_124:
         type: boolean
         description: "Run on ai400x-123-124"
-        default: false
+        default: true
 
       ai400x_125_126:
         type: boolean
