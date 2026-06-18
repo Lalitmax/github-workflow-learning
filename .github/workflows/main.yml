@@ -1,0 +1,106 @@
+name: Test EMF Between Jobs
+
+on:
+workflow_dispatch:
+
+jobs:
+setup:
+runs-on: ubuntu-latest
+
+```
+steps:
+  - name: Show runner info
+    run: |
+      echo "===== SETUP JOB ====="
+      hostname
+      whoami
+      pwd
+      echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
+
+  - name: Download EMF
+    run: |
+      wget -O emf https://raw.githubusercontent.com/github/gitignore/main/README.md
+
+  - name: Verify download
+    run: |
+      echo "===== AFTER DOWNLOAD ====="
+      ls -lah
+      ls -l emf
+      file emf
+      stat emf
+
+  - name: Upload EMF artifact
+    uses: actions/upload-artifact@v4
+    with:
+      name: emf
+      path: emf
+```
+
+provision-without-artifact:
+runs-on: ubuntu-latest
+needs: setup
+
+```
+steps:
+  - name: Debug before mv
+    run: |
+      echo "===== WITHOUT ARTIFACT ====="
+      hostname
+      whoami
+      pwd
+      echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
+
+      echo
+      echo "Workspace contents:"
+      ls -lah
+
+      echo
+      echo "Find emf:"
+      find . -name "*emf*" 2>/dev/null || true
+
+      echo
+      echo "Check emf:"
+      ls -l emf || true
+
+  - name: Simulate original mv
+    run: |
+      mv emf /tmp/
+```
+
+provision-with-artifact:
+runs-on: ubuntu-latest
+needs: setup
+
+```
+steps:
+  - name: Download EMF artifact
+    uses: actions/download-artifact@v4
+    with:
+      name: emf
+
+  - name: Debug before mv
+    run: |
+      echo "===== WITH ARTIFACT ====="
+      hostname
+      whoami
+      pwd
+      echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
+
+      echo
+      echo "Workspace contents:"
+      ls -lah
+
+      echo
+      echo "Find emf:"
+      find . -name "*emf*" 2>/dev/null || true
+
+      echo
+      echo "Check emf:"
+      ls -l emf
+      file emf
+
+  - name: Move emf
+    run: |
+      mv emf /tmp/
+      ls -l /tmp/emf
+```
