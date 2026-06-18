@@ -1,4 +1,4 @@
-name: Test EMF Between Jobs
+name: Test EMF Container + Artifact
 
 on:
   workflow_dispatch:
@@ -8,27 +8,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Show runner info
+      - name: Setup Debug
         run: |
-          echo "===== SETUP JOB ====="
+          echo "===== SETUP ====="
           hostname
           whoami
           pwd
-          echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
+          echo "WORKSPACE=$GITHUB_WORKSPACE"
 
       - name: Download EMF
         run: |
           wget -O emf https://raw.githubusercontent.com/github/gitignore/main/README.md
 
-      - name: Verify download
+      - name: Verify Download
         run: |
-          echo "===== AFTER DOWNLOAD ====="
+          echo "===== VERIFY DOWNLOAD ====="
           ls -lah
           ls -l emf
           file emf
           stat emf
 
-      - name: Upload EMF artifact
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: emf
@@ -38,27 +38,61 @@ jobs:
     runs-on: ubuntu-latest
     needs: setup
 
+    container:
+      image: almalinux:8
+      volumes:
+        - /tmp/emf-test:/tmp/emf-test
+
     steps:
-      - name: Debug before mv
+      - name: Debug Container
         run: |
           echo "===== WITHOUT ARTIFACT ====="
+
+          echo
+          echo "Hostname:"
           hostname
+
+          echo
+          echo "User:"
           whoami
+
+          echo
+          echo "PWD:"
           pwd
 
           echo
-          echo "Workspace contents:"
+          echo "Workspace:"
+          echo "$GITHUB_WORKSPACE"
+
+          echo
+          echo "OS:"
+          cat /etc/os-release
+
+          echo
+          echo "Files in workspace:"
           ls -lah
 
           echo
-          echo "Find emf:"
+          echo "Find emf in workspace:"
           find . -name "*emf*" 2>/dev/null || true
 
           echo
-          echo "Check emf:"
+          echo "Find emf anywhere:"
+          find / -name emf 2>/dev/null | head -50 || true
+
+          echo
+          echo "Mounted volumes:"
+          mount | head -50
+
+          echo
+          echo "Volume contents:"
+          ls -lah /tmp/emf-test || true
+
+          echo
+          echo "Direct check:"
           ls -l emf || true
 
-      - name: Simulate original mv
+      - name: Simulate Original Failure
         run: |
           mv emf /tmp/
 
@@ -66,33 +100,74 @@ jobs:
     runs-on: ubuntu-latest
     needs: setup
 
+    container:
+      image: almalinux:8
+      volumes:
+        - /tmp/emf-test:/tmp/emf-test
+
     steps:
-      - name: Download EMF artifact
+      - name: Download Artifact
         uses: actions/download-artifact@v4
         with:
           name: emf
 
-      - name: Debug before mv
+      - name: Debug Container
         run: |
           echo "===== WITH ARTIFACT ====="
+
+          echo
+          echo "Hostname:"
           hostname
+
+          echo
+          echo "User:"
           whoami
+
+          echo
+          echo "PWD:"
           pwd
 
           echo
-          echo "Workspace contents:"
+          echo "Workspace:"
+          echo "$GITHUB_WORKSPACE"
+
+          echo
+          echo "OS:"
+          cat /etc/os-release
+
+          echo
+          echo "Files in workspace:"
           ls -lah
 
           echo
-          echo "Find emf:"
+          echo "Find emf in workspace:"
           find . -name "*emf*" 2>/dev/null || true
 
           echo
-          echo "Check emf:"
+          echo "Find emf anywhere:"
+          find / -name emf 2>/dev/null | head -50 || true
+
+          echo
+          echo "Mounted volumes:"
+          mount | head -50
+
+          echo
+          echo "Volume contents:"
+          ls -lah /tmp/emf-test || true
+
+          echo
+          echo "Direct check:"
           ls -l emf
           file emf
+          stat emf
 
-      - name: Move emf
+      - name: Move EMF
         run: |
           mv emf /tmp/
           ls -l /tmp/emf
+
+      - name: Verify Final Location
+        run: |
+          echo "===== FINAL VERIFY ====="
+          ls -l /tmp/emf
+          file /tmp/emf
