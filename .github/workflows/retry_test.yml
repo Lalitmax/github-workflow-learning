@@ -1,0 +1,176 @@
+name: Test Retry Logic
+
+on:
+  workflow_dispatch:  # Manual trigger only
+
+jobs:
+  test-retry-success-first-try:
+    name: "Test: Success on First Try"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Simulate successful download
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 2
+          max_attempts: 3
+          retry_on: error
+          warning_on_retry: true
+          shell: bash
+          command: |
+            set -e
+            echo "Attempt to download file..."
+            curl -o /tmp/test.txt https://www.google.com/robots.txt
+            echo "Download successful!"
+            ls -lh /tmp/test.txt
+
+  test-retry-fail-then-succeed:
+    name: "Test: Fail Once, Then Succeed"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Simulate flaky download (fails first, succeeds second)
+        uses: nick-fields/retry@v3
+        id: flaky_download
+        with:
+          timeout_minutes: 2
+          max_attempts: 3
+          retry_on: error
+          warning_on_retry: true
+          shell: bash
+          command: |
+            set -e
+            
+            # Check if marker file exists (indicates we already tried once)
+            if [ ! -f /tmp/retry_marker ]; then
+              echo "First attempt - simulating failure..."
+              touch /tmp/retry_marker
+              echo "ERROR: Network timeout (simulated)"
+              exit 1  # Fail on purpose
+            else
+              echo "Second attempt - simulating success..."
+              curl -o /tmp/test.txt https://www.google.com/robots.txt
+              echo "Download successful on retry!"
+              ls -lh /tmp/test.txt
+              rm /tmp/retry_marker
+            fi
+      
+      - name: Show retry stats
+        shell: bash
+        run: |
+          echo "Total attempts made: ${{ steps.flaky_download.outputs.total_attempts }}"
+          echo "Final exit code: ${{ steps.flaky_download.outputs.exit_code }}"
+
+  test-retry-copy-fail:
+    name: "Test: Copy Non-Existent File"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Simulate missing file copy (will retry 3 times)
+        uses: nick-fields/retry@v3
+        continue-on-error: true  # Don't fail the job
+        id: copy_fail
+        with:
+          timeout_minutes: 1
+          max_attempts: 3
+          retry_on: error
+          warning_on_retry: true
+          retry_wait_seconds: 5
+          shell: bash
+          command: |
+            set -e
+            echo "Attempting to copy non-existent file..."
+            cp /tmp/does-not-exist.txt /tmp/destination.txt
+      
+      - name: Show failure stats
+        shell: bash
+        run: |
+          echo "Total attempts made: ${{ steps.copy_fail.outputs.total_attempts }}"
+          echo "Final exit code: ${{ steps.copy_fail.outputs.exit_code }}"
+          echo "This should show 3 attempts with exit code 1"
+
+  test-retry-network-timeout:
+    name: "Test: Network Timeout Simulation"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Simulate network timeout
+        uses: nick-fields/retry@v3
+        id: timeout_test
+        with:
+          timeout_seconds: 10  # Short timeout
+          max_attempts: 3
+          retry_on: error
+          warning_on_retry: true
+          retry_wait_seconds: 2
+          shell: bash
+          command: |
+            set -e
+            
+            # Simulate slow network by attempting to connect to a non-routable IP
+            # This will timeout quickly
+            if [ ! -f /tmp/timeout_marker ]; then
+              echo "First attempt - simulating timeout..."
+              touch /tmp/timeout_marker
+              curl --max-time 5 http://192.0.2.1/test.txt || exit 1
+            else
+              echo "Second attempt - using real URL..."
+              curl -o /tmp/test.txt https://www.google.com/robots.txt
+              echo "Success on retry!"
+              rm /tmp/timeout_marker
+            fi
+      
+      - name: Show timeout retry stats
+        shell: bash
+        run: |
+          echo "Total attempts: ${{ steps.timeout_test.outputs.total_attempts }}"
+          echo "Should be 2 attempts"
+
+  test-cargo-like-failure:
+    name: "Test: Cargo-like Dependency Download Failure"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Simulate cargo dependency download failure
+        uses: nick-fields/retry@v3
+        id: cargo_test
+        with:
+          timeout_minutes: 2
+          max_attempts: 3
+          retry_on: error
+          warning_on_retry: true
+          retry_wait_seconds: 10
+          shell: bash
+          command: |
+            set -e
+            set -x  # Print commands for debugging
+            
+            echo "Simulating cargo build with dependency download..."
+            
+            # Simulate failure on first two attempts
+            ATTEMPT_FILE="/tmp/cargo_attempt_count"
+            if [ -f "$ATTEMPT_FILE" ]; then
+              ATTEMPT=$(cat "$ATTEMPT_FILE")
+              ATTEMPT=$((ATTEMPT + 1))
+              echo $ATTEMPT > "$ATTEMPT_FILE"
+            else
+              ATTEMPT=1
+              echo $ATTEMPT > "$ATTEMPT_FILE"
+            fi
+            
+            echo "This is attempt number: $ATTEMPT"
+            
+            if [ $ATTEMPT -lt 3 ]; then
+              echo "ERROR: failed to download dependency 'test-package'"
+              echo "Caused by: unable to update registry crates-io"
+              echo "Caused by: download of config.json failed"
+              echo "Caused by: [7] Could not connect to server"
+              exit 101  # Exit with cargo-like error code
+            else
+              echo "Success! Downloaded all dependencies"
+              echo "Compiling test-package..."
+              echo "Finished release [optimized] target(s)"
+              rm "$ATTEMPT_FILE"
+            fi
+      
+      - name: Show cargo-like retry stats
+        shell: bash
+        run: |
+          echo "Total attempts: ${{ steps.cargo_test.outputs.total_attempts }}"
+          echo "Exit code: ${{ steps.cargo_test.outputs.exit_code }}"
+          echo "Should be 3 attempts with final exit code 0"
