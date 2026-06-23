@@ -17,7 +17,7 @@ jobs:
           warning_on_retry: true
           shell: bash
           command: |
-            set -e
+            set -eux
             echo "Attempt to download file..."
             curl -o /tmp/test.txt https://www.google.com/robots.txt
             echo "Download successful!"
@@ -37,7 +37,7 @@ jobs:
           warning_on_retry: true
           shell: bash
           command: |
-            set -e
+            set -eux
             
             # Check if marker file exists (indicates we already tried once)
             if [ ! -f /tmp/retry_marker ]; then
@@ -75,7 +75,7 @@ jobs:
           retry_wait_seconds: 5
           shell: bash
           command: |
-            set -e
+            set -eux
             echo "Attempting to copy non-existent file..."
             cp /tmp/does-not-exist.txt /tmp/destination.txt
       
@@ -101,7 +101,7 @@ jobs:
           retry_wait_seconds: 2
           shell: bash
           command: |
-            set -e
+            set -eux
             
             # Simulate slow network by attempting to connect to a non-routable IP
             # This will timeout quickly
@@ -137,7 +137,7 @@ jobs:
           retry_wait_seconds: 10
           shell: bash
           command: |
-            set -e
+            set -eux
             set -x  # Print commands for debugging
             
             echo "Simulating cargo build with dependency download..."
