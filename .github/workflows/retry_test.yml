@@ -19,7 +19,7 @@ jobs:
           '
 
       - name: Test 1 - Success on first attempt
-        shell: bash
+        shell: bash -eux {0}
         run: |
           retry --max 3 --interval 5 -- bash -c '
             lsd
