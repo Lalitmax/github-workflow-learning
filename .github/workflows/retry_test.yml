@@ -19,9 +19,9 @@ jobs:
           '
 
       - name: Test 1 - Success on first attempt
-        shell: bash -eux {0}
+        shell: bash
         run: |
-          retry --max 3 --interval 5 -- bash -c '
+          retry --max 3 --interval 5 -- bash -eux -c '
             lsd
             curl  --connect-timeout 2 http://192.0.2.1/config.json
           '
