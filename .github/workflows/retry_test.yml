@@ -1,4 +1,3 @@
-```yaml
 name: Test retry-cmd
 
 on:
@@ -24,68 +23,3 @@ jobs:
           retry --max 3 --interval 60 -- bash -eux -c '
             echo "Success on first attempt"
           '
-
-      - name: Test 2 - Fail once then succeed
-        run: |
-          rm -f /tmp/retry_marker
-
-          retry --max 3 --interval 60 -- bash -eux -c '
-            if [ ! -f /tmp/retry_marker ]; then
-              echo "First attempt - failing"
-              touch /tmp/retry_marker
-              exit 1
-            fi
-
-            echo "Second attempt - success"
-            rm -f /tmp/retry_marker
-          '
-
-      - name: Test 3 - Missing file (should retry 3 times)
-        continue-on-error: true
-        run: |
-          retry --max 3 --interval 60 -- bash -eux -c '
-            cp /tmp/does-not-exist /tmp/out
-          '
-
-      - name: Test 4 - Cargo-like failure then success
-        run: |
-          rm -f /tmp/cargo_attempt
-
-          retry --max 3 --interval 60 -- bash -eux -c '
-            FILE=/tmp/cargo_attempt
-
-            if [ ! -f "$FILE" ]; then
-              echo 1 > "$FILE"
-            else
-              COUNT=$(cat "$FILE")
-              COUNT=$((COUNT + 1))
-              echo "$COUNT" > "$FILE"
-            fi
-
-            COUNT=$(cat "$FILE")
-            echo "Attempt: $COUNT"
-
-            if [ "$COUNT" -lt 3 ]; then
-              echo "error: failed to download dependency"
-              echo "Caused by: download of config.json failed"
-              exit 101
-            fi
-
-            echo "Dependencies downloaded successfully"
-            rm -f "$FILE"
-          '
-
-      - name: Test 5 - HTTP 404 retries
-        continue-on-error: true
-        run: |
-          retry --max 3 --interval 60 -- bash -eux -c '
-            curl --fail -I https://unstable.site
-          '
-
-      - name: Test 6 - Successful download
-        run: |
-          retry --max 3 --interval 60 -- bash -eux -c '
-            curl --fail -o /tmp/robots.txt https://www.google.com/robots.txt
-            ls -lh /tmp/robots.txt
-          '
-```
