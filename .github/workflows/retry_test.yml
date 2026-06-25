@@ -1,3 +1,4 @@
+```yaml
 name: Test retry-cmd
 
 on:
@@ -14,20 +15,21 @@ jobs:
 
       - name: Verify installation
         run: |
-          retry --version
+          retry --max 3 --interval 60 -- bash -eux -c '
+            retry --version
+          '
 
       - name: Test 1 - Success on first attempt
         run: |
-          retry --max 3 -- bash -c '
+          retry --max 3 --interval 60 -- bash -eux -c '
             echo "Success on first attempt"
-            exit 0
           '
 
       - name: Test 2 - Fail once then succeed
         run: |
           rm -f /tmp/retry_marker
 
-          retry --max 3 -- bash -c '
+          retry --max 3 --interval 60 -- bash -eux -c '
             if [ ! -f /tmp/retry_marker ]; then
               echo "First attempt - failing"
               touch /tmp/retry_marker
@@ -36,19 +38,20 @@ jobs:
 
             echo "Second attempt - success"
             rm -f /tmp/retry_marker
-            exit 0
           '
 
       - name: Test 3 - Missing file (should retry 3 times)
         continue-on-error: true
         run: |
-          retry --max 3 -- cp /tmp/does-not-exist /tmp/out
+          retry --max 3 --interval 60 -- bash -eux -c '
+            cp /tmp/does-not-exist /tmp/out
+          '
 
       - name: Test 4 - Cargo-like failure then success
         run: |
           rm -f /tmp/cargo_attempt
 
-          retry --max 3 -- bash -c '
+          retry --max 3 --interval 60 -- bash -eux -c '
             FILE=/tmp/cargo_attempt
 
             if [ ! -f "$FILE" ]; then
@@ -75,13 +78,14 @@ jobs:
       - name: Test 5 - HTTP 404 retries
         continue-on-error: true
         run: |
-          retry --max 3 -- \
+          retry --max 3 --interval 60 -- bash -eux -c '
             curl --fail -I https://unstable.site
+          '
 
       - name: Test 6 - Successful download
         run: |
-          retry --max 3 -- \
+          retry --max 3 --interval 60 -- bash -eux -c '
             curl --fail -o /tmp/robots.txt https://www.google.com/robots.txt
-
-          ls -lh /tmp/robots.txt
-
+            ls -lh /tmp/robots.txt
+          '
+```
