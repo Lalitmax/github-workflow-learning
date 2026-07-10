@@ -13,96 +13,6 @@ on:
         description: "Run on ai400x-125-126"
         default: false
 
-      ai400x3_206_207:
-        type: boolean
-        description: "Run on ai400x3-206-207"
-        default: false
-
-      ai400x2_multi_abc_97_100:
-        type: boolean
-        description: "Run on ai400x2-multi-abc-97-100"
-        default: false
-
-      ai400x2_multi_abc_123_126:
-        type: boolean
-        description: "Run on ai400x2-multi-abc-123-126"
-        default: false
-
-      abc_provision:
-        type: boolean
-        description: "Provision ABC cluster"
-        default: false
-
-      release:
-        type: choice
-        description: "The ABC release to provision"
-        options:
-          - "7.0.0"
-          - "6.3.8"
-          - "6.3.7"
-          - "6.3.6"
-          - "6.3.5"
-          - "6.3.4"
-          - "6.3.3"
-          - "6.3.2"
-          - "6.3.1"
-        default: "6.3.8"
-
-      image_release:
-        type: string
-        description: "The image release to provision, for GA builds input build number (eg: 2025091300)"
-        default: latest
-
-      distro_id:
-        type: choice
-        description: "The distro flavor"
-        options:
-          - "rocky"
-          - "rhel"
-        default: "rocky"
-
-      build_type:
-        type: choice
-        description: "The build type of the image"
-        options:
-          - "stream"
-          - "staging"
-          - "test"
-          - "GA"
-        default: "stream"
-
-      abc_action:
-        type: choice
-        description: "Action to perform ABC downgrade/upgrade (optional)"
-        options:
-          - ""
-          - "downgrade"
-          - "upgrade"
-        default: ""
-        required: false
-
-      abc_version:
-        type: choice
-        description: "ABC version to downgrade/upgrade to (only required when 'abc_action' is chosen)"
-        default: ""
-        options:
-          - ""
-          - "12.2"
-          - "12.3"
-          - "12.4"
-          - "12.5"
-          - "12.6"
-          - "12.7"
-          - "12.8"
-          - "12.9"
-        required: false
-
-      abc_firmware_pack_name:
-        type: string
-        description: "ABC Firmware Pack Name (only required when 'abc_action' is chosen), can be found here (http://10.36.44.45/artifacts/abcscaler/firmware/)"
-        default: "ddn-flash-ALTAV-latest-opt.ddn.tgz"
-        required: false
-
       ref:
         type: string
         description: "The whamcloud/cluster-provisioning ref to build"
@@ -132,18 +42,6 @@ jobs:
             ENVS+=("ai400x-125-126")
           fi
 
-          if [[ "${{ inputs.ai400x3_206_207 }}" == "true" ]]; then
-            ENVS+=("ai400x3-206-207")
-          fi
-
-          if [[ "${{ inputs.ai400x2_multi_abc_97_100 }}" == "true" ]]; then
-            ENVS+=("ai400x2-multi-abc-97-100")
-          fi
-
-          if [[ "${{ inputs.ai400x2_multi_abc_123_126 }}" == "true" ]]; then
-            ENVS+=("ai400x2-multi-abc-123-126")
-          fi
-
           JSON_ARRAY=$(printf '%s\n' "${ENVS[@]}" | jq -R . | jq -s -c .)
           echo "environments_json=$JSON_ARRAY" >> "$GITHUB_OUTPUT"
 
@@ -151,7 +49,6 @@ jobs:
           echo "JSON: $JSON_ARRAY"
 
   abc_provision:
-    if: inputs.abc_provision == true
     needs: parse_environments
     strategy:
       matrix:
@@ -169,23 +66,8 @@ jobs:
         run: |
           echo "========================================="
           echo "ABC Provision on: ${{ matrix.environment }}"
-          echo "========================================="
-          echo "Release: ${{ inputs.release }}"
-          echo "Image Release: ${{ inputs.image_release }}"
-          echo "Distro: ${{ inputs.distro_id }}"
-          echo "Build Type: ${{ inputs.build_type }}"
-          echo "Ref: ${{ inputs.ref }}"
-
-      - name: Run ABC provision
-        run: |
-          echo "Provisioning ABC cluster..."
-          echo "Environment: ${{ matrix.environment }}"
-          echo "Release: ${{ inputs.release }}"
-          echo "Image: ${{ inputs.image_release }}"
-          # Add your actual provision commands here
 
   setup_abc:
-    if: inputs.abc_action != ''
     needs: parse_environments
     strategy:
       matrix:
@@ -203,14 +85,3 @@ jobs:
         run: |
           echo "========================================="
           echo "ABC ${{ inputs.abc_action }} on: ${{ matrix.environment }}"
-          echo "========================================="
-          echo "Action: ${{ inputs.abc_action }}"
-          echo "ABC Version: ${{ inputs.abc_version }}"
-          echo "Firmware Pack: ${{ inputs.abc_firmware_pack_name }}"
-
-      - name: Run ABC downgrade/upgrade
-        run: |
-          echo "Running ABC ${{ inputs.abc_action }}..."
-          echo "Target Version: ${{ inputs.abc_version }}"
-          echo "Firmware Pack: ${{ inputs.abc_firmware_pack_name }}"
-          # Add your actual ABC downgrade/upgrade commands here
