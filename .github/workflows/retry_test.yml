@@ -3,6 +3,9 @@ name: Test retry-cmd
 on:
   workflow_dispatch:
 
+defaults:
+  run:
+    shell: bash -eux {0}
 jobs:
   retry-tests:
     runs-on: ubuntu-latest
