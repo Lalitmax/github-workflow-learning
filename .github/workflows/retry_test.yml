@@ -23,4 +23,7 @@ jobs:
       # Test 1: retry with a simple failing command
       - name: Test 1 - Retry direct command
         shell: bash
-        run: retry --max 3 --interval 5 -- bash -eux -c 'git status'
+        run: |
+          retry --max 3 --interval 5 -- git status
+          rc=$?
+          echo "$output"
