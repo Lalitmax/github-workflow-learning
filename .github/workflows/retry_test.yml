@@ -24,6 +24,6 @@ jobs:
       - name: Test 1 - Retry direct command
         shell: bash
         run: |
-          retry --max 3 --interval 5 -- git status
+          retry --max 3 --interval 5 -- bash -eux -c 'git status'
           rc=$?
           echo "retry exit code: $rc"
