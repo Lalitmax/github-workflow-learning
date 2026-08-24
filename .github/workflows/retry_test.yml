@@ -26,4 +26,4 @@ jobs:
         run: |
           retry --max 3 --interval 5 -- git status
           rc=$?
-          echo "$output"
+          echo "retry exit code: $rc"
