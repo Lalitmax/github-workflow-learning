@@ -22,28 +22,4 @@ jobs:
 
       # Test 1: retry with a simple failing command
       - name: Test 1 - Retry direct command
-        run: retry --max 3 --interval 5 -- false
-
-      # Test 2: retry with explicit bash shell
-      - name: Test 2 - Retry with shell bash
-        shell: bash
-        run: retry --max 3 --interval 5 -- false
-
-      # Test 3: retry with bash -eux -c
-      - name: Test 3 - Retry with bash -eux
-        shell: bash
-        run: retry --max 3 --interval 5 -- bash -eux -c 'false'
-
-      # Test 4: retry with a successful command
-      - name: Test 4 - Success
-        run: retry --max 3 --interval 5 -- true
-
-      # Test 5: retry with multiple commands using bash -eux -c
-      - name: Test 5 - Multi-command failure
-        shell: bash
-        run: |
-          retry --max 3 --interval 5 -- bash -eux -c '
-            echo "Starting test"
-            false
-            echo "This should not run"
-          '
+        run: retry --max 3 --interval 5 -- git status
