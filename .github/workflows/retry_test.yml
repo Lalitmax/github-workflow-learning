@@ -19,7 +19,7 @@ jobs:
       # Test 1: retry with a simple failing command
       - name: Test 1 - Retry direct command
         run: |
-          retry --attempts 3 --min-duration 3s bash -c '
+          retry --attempts 3 --min-duration 3s -- bash -c '
             ls
             pwd
           '
