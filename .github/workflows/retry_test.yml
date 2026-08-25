@@ -26,12 +26,12 @@ jobs:
       - name: Test 2 - Retry direct command
         run: |
           retry --attempts 3 --min-duration 3s -- bash -c '
-            ls
+            pwd
             git ls
           '
       - name: Test 3 - Retry direct command
         run: |
           retry --attempts 3 --min-duration 3s -- bash -eux -c '
-            ls
+            pwd
             git ls
           '
