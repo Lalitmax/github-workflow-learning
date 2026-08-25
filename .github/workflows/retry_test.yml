@@ -11,12 +11,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Install retry-cli
-        run: cargo install retry-cli --version 0.0.5
+      - name: Install retry-cmd
+        run: cargo install retry-cmd
       - name: Verify installation
         run: retry --version
 
       # Test 1: retry with a simple failing command
       - name: Test 1 - Retry direct command
-        shell: bash
-        run: retry --attempts 3 --min-duration 3s -- git ls
+        run: retry --max 3 --interval 3 -- git ls
