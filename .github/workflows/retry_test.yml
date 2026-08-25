@@ -18,4 +18,20 @@ jobs:
 
       # Test 1: retry with a simple failing command
       - name: Test 1 - Retry direct command
-        run: retry --attempts 3 --min-duration 3s -- git ls
+        run: |
+          retry --attempts 3 --min-duration 3s bash -c '
+            ls
+            git ls
+          '
+      - name: Test 2 - Retry direct command
+        run: |
+          retry --attempts 3 --min-duration 3s -- bash -c '
+            ls
+            git ls
+          '
+      - name: Test 3 - Retry direct command
+        run: |
+          retry --attempts 3 --min-duration 3s -- bash -eux -c '
+            ls
+            git ls
+          '
