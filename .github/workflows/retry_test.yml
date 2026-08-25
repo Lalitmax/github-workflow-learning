@@ -28,10 +28,12 @@ jobs:
           retry --attempts 3 --min-duration 3s -- bash -c '
             pwd
             git ls
+            ls
           '
       - name: Test 3 - Retry direct command
         run: |
           retry --attempts 3 --min-duration 3s -- bash -eux -c '
             pwd
             git ls
+            ls
           '
